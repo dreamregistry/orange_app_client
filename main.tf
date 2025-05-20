@@ -8,6 +8,7 @@ variable "orange_app_client_id" {
 
 variable "orange_app_client_secret" {
   type = string
+  sensitive = true
 }
 
 
