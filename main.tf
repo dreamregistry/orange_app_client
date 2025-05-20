@@ -1,6 +1,34 @@
 terraform {
   backend "s3" {}
+
+  required_providers {
+    random = {
+      source  = "registry.terraform.io/hashicorp/random"
+      version = "3.2.0"
+    }
+    aws = {
+      source  = "registry.terraform.io/hashicorp/aws"
+      version = "~> 4.0"
+    }
+  }
 }
+
+provider "random" {}
+provider "aws" {}
+
+data "aws_region" "current" {}
+
+resource "random_pet" "name" {
+
+}
+
+resource "aws_ssm_parameter" "secret" {
+  name        = "/orange_app_client_secret/${random_pet.name.id}/value"
+  description = "Orange app client secret"
+  type        = "SecureString"
+  value       = var.orange_app_client_secret
+}
+
 
 variable "orange_app_client_id" {
   type = string
@@ -20,8 +48,12 @@ output "ORANGE_APP_CLIENT_ID" {
 }
 
 output "ORANGE_APP_CLIENT_SECRET" {
-  value = var.orange_app_client_secret
-  sensitive = true
+  value = {
+    type   = "ssm"
+    arn    = aws_ssm_parameter.secret.arn
+    key    = aws_ssm_parameter.secret.name
+    region = data.aws_region.current.name
+  }
 }
 
 output "ORANGE_API_URL" {
